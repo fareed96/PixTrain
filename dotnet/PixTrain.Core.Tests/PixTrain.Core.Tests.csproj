@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unity'deki EditMode testlerini (Assets/_Project/Tests/EditMode) Unity olmadan çalıştırır:
+      dotnet test dotnet/PixTrain.Core.Tests
+    Aynı test dosyaları Unity Test Runner'da da çalışır.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>PixTrain.Core.Tests</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../unity/PixTrain/Assets/_Project/Tests/EditMode/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PixTrain.Core/PixTrain.Core.csproj" />
+  </ItemGroup>
+
+</Project>

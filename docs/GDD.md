@@ -186,20 +186,24 @@ Her sefer prosedürel üretilir: kır, kasaba, şehir ve nehir bölgeleri sıray
 ### Faz 0: Prototip (bu repo) ✅
 HTML5 Canvas, tek dosya. Amaç: görsel dil, makas mekaniği ve ekonomi hissini test etmek.
 
-### Faz 1: Dikey dilim (Unity 6, C#)
-C# tercihine uygun olarak **Unity 2D (URP) + Pixel Perfect Camera** öneriyorum. Katmanlı (N-tier) yapı:
+### Faz 1: Dikey dilim (Unity 6, C#), devam ediyor
+**Unity 6 LTS (6000.3.27f1), 2D URP, dikey ekran.** Ayrıntılar: [`docs/UNITY.md`](UNITY.md)
+
+- ✅ Unity proje iskeleti (`unity/PixTrain`): Unity'nin Universal 2D şablonu, editörle gelen paket sürümleri, dikey ekran.
+- ✅ Kurallar katmanı (`PixTrain.Core`, Unity'den bağımsız): prototipteki bütün kurallar C#'a taşındı.
+- ✅ 57 NUnit testi; `dotnet test dotnet/PixTrain.sln` ile Unity olmadan, Unity Test Runner'da da çalışır.
+- ⬜ Görsel katman (tren, ray, ışık, arayüz, kaydırma, ses).
+- ⬜ GitHub Actions + GameCI: WebGL ve Android derlemesi.
+
+Katmanlı (N-tier) yapı:
 
 ```
-PixTrain.Data          ScriptableObject tanımları (Route, Biome, Station, Upgrade, Locomotive)
-                       IProgressRepository / ProgressRepository   ← kayıt (JSON / PlayerPrefs / bulut)
-PixTrain.Domain        IRunService / RunService       ← makas, peron, yakıt, tehlike kuralları
-                       ICargoService / CargoService   ← vagon, yükleme, teslimat, kombo
-                       IEconomyService / EconomyService ← fiyat, sözleşme, yıldız, hat geliri
-                       IWorldGenService / WorldGenService ← bölge ve peron üretimi (seed'li)
-PixTrain.Presentation  MonoBehaviour'lar: TrainView, TrackChunkRenderer, LightingOverlay, HUD, Garage UI
+PixTrain.Core.Data          GameBalance, GameCatalog (şehir, hat, biyom, peron, geliştirme, lokomotif, sözleşme)
+PixTrain.Core.Repositories  IProgressRepository  ← kayıt (bellek / PlayerPrefs-JSON / bulut)
+PixTrain.Core.Services      IRunService, IWorldGenService, ICargoService, IEconomyService,
+                            IGarageService, IContractService
+PixTrain.Presentation       MonoBehaviour'lar: TrainView, TrackRenderer, LightingOverlay, HUD, Garage UI (sıradaki adım)
 ```
-
-Kurallar Unity'den bağımsız düz C# sınıfları olur. Prototipteki `update / hitGate / deliver / genSegment` fonksiyonları birebir servis metotlarına taşınır ve NUnit ile test edilir.
 
 ### Faz 2: Backend (opsiyonel, canlı operasyon)
 - **ASP.NET Core Web API:** `IPlayerRepository → IPlayerService → PlayerController` (bulut kayıt), `ILeaderboardRepository → ILeaderboardService → LeaderboardController` (haftalık "en kazançlı sefer"), `IEconomyConfigService` (fiyat ve sözleşme tablolarını sunucudan ayarlama).

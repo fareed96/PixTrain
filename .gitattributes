@@ -1,0 +1,21 @@
+# Satır sonlarını sabitle (Windows'ta Unity ile çalışırken gereksiz diff olmasın)
+*.cs            text eol=lf
+*.asmdef        text eol=lf
+*.json          text eol=lf
+*.md            text eol=lf
+*.py            text eol=lf
+*.csproj        text eol=lf
+*.sln           text eol=crlf
+
+# Unity YAML dosyaları
+*.meta          text eol=lf
+*.asset         text eol=lf merge=unityyamlmerge
+*.unity         text eol=lf merge=unityyamlmerge
+*.prefab        text eol=lf merge=unityyamlmerge
+*.mat           text eol=lf merge=unityyamlmerge
+*.inputactions  text eol=lf
+
+# İkili dosyalar
+*.png           binary
+*.wav           binary
+*.ogg           binary

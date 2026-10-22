@@ -1,0 +1,34 @@
+# ---------- Unity ----------
+unity/PixTrain/[Ll]ibrary/
+unity/PixTrain/[Tt]emp/
+unity/PixTrain/[Oo]bj/
+unity/PixTrain/[Bb]uild/
+unity/PixTrain/[Bb]uilds/
+unity/PixTrain/[Ll]ogs/
+unity/PixTrain/[Uu]ser[Ss]ettings/
+unity/PixTrain/[Mm]emoryCaptures/
+unity/PixTrain/[Rr]ecordings/
+unity/PixTrain/Assets/Plugins/Editor/JetBrains*
+unity/PixTrain/*.csproj
+unity/PixTrain/*.sln
+unity/PixTrain/*.slnx
+unity/PixTrain/*.user
+unity/PixTrain/.vs/
+unity/PixTrain/.idea/
+unity/PixTrain/.vscode/
+unity/PixTrain/*.apk
+unity/PixTrain/*.aab
+unity/PixTrain/crashlytics-build.properties
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# ---------- .NET ----------
+dotnet/**/bin/
+dotnet/**/obj/
+dotnet/**/TestResults/
+
+# ---------- Genel ----------
+.DS_Store
+Thumbs.db

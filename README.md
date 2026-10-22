@@ -4,6 +4,23 @@ Dikey ekranda oynanan, pixel art şehirlerarası tren oyunu. Tren kendi kendine 
 
 - **Tasarım dokümanı:** [`docs/GDD.md`](docs/GDD.md)
 - **Oynanabilir prototip:** [`prototype/index.html`](prototype/index.html)
+- **Unity projesi (Unity 6 LTS, C#):** [`unity/PixTrain`](unity/PixTrain); yapı ve komutlar [`docs/UNITY.md`](docs/UNITY.md)
+
+## Repo yapısı
+
+| Klasör | İçerik |
+|---|---|
+| `prototype/` | Tek dosyalık HTML5 prototip (tarayıcıda oynanır) |
+| `unity/PixTrain/` | Unity projesi; oyun kuralları `Assets/_Project/Scripts/Core` altında, Unity'den bağımsız C# |
+| `dotnet/` | Kurallar katmanını Unity olmadan derleyip test eden .NET projeleri |
+| `tools/` | Yardımcı betikler (Unity `.meta` üretimi) |
+| `docs/` | Tasarım dokümanı ve Unity notları |
+
+Kuralların testlerini çalıştırmak için (.NET 8 SDK gerekir):
+
+```bash
+dotnet test dotnet/PixTrain.sln
+```
 
 ## Prototipi çalıştırma
 
