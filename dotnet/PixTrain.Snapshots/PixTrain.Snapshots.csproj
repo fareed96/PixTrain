@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unity olmadan oyun kareleri üretir (görsel kontrol ve karşılaştırma için):
+      dotnet run -c Release (proje: dotnet/PixTrain.Snapshots), argüman: çıktı klasörü
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>PixTrain.Snapshots</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PixTrain.Core/PixTrain.Core.csproj" />
+    <ProjectReference Include="../PixTrain.Render/PixTrain.Render.csproj" />
+  </ItemGroup>
+
+</Project>

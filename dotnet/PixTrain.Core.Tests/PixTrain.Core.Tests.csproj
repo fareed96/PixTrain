@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../PixTrain.Core/PixTrain.Core.csproj" />
+    <ProjectReference Include="../PixTrain.Render/PixTrain.Render.csproj" />
   </ItemGroup>
 
 </Project>

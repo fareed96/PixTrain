@@ -1,0 +1,16 @@
+{
+    "name": "PixTrain.Render",
+    "rootNamespace": "PixTrain.Render",
+    "references": [
+        "PixTrain.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

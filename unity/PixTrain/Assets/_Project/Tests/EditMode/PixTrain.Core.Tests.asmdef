@@ -3,6 +3,7 @@
     "rootNamespace": "PixTrain.Core.Tests",
     "references": [
         "PixTrain.Core",
+        "PixTrain.Render",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

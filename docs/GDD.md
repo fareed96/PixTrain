@@ -191,8 +191,9 @@ HTML5 Canvas, tek dosya. Amaç: görsel dil, makas mekaniği ve ekonomi hissini 
 
 - ✅ Unity proje iskeleti (`unity/PixTrain`): Unity'nin Universal 2D şablonu, editörle gelen paket sürümleri, dikey ekran.
 - ✅ Kurallar katmanı (`PixTrain.Core`, Unity'den bağımsız): prototipteki bütün kurallar C#'a taşındı.
-- ✅ 57 NUnit testi; `dotnet test dotnet/PixTrain.sln` ile Unity olmadan, Unity Test Runner'da da çalışır.
-- ⬜ Görsel katman (tren, ray, ışık, arayüz, kaydırma, ses).
+- ✅ Görsel katman: sahne prototiple aynı görünümde yazılım piksel çiziciyle çizilir; HUD ve menüler uGUI, kaydırma kontrolleri Input System, sesler kodla sentezlenir.
+- ✅ 69 NUnit testi; `dotnet test dotnet/PixTrain.sln` ile Unity olmadan, Unity Test Runner'da da çalışır. Unity katmanı gerçek Unity API'lerine karşı hatasız derlenir.
+- ⬜ Unity'de çalışırken görülmesi (lisans + derleme hattı ile).
 - ⬜ GitHub Actions + GameCI: WebGL ve Android derlemesi.
 
 Katmanlı (N-tier) yapı:
@@ -202,7 +203,8 @@ PixTrain.Core.Data          GameBalance, GameCatalog (şehir, hat, biyom, peron,
 PixTrain.Core.Repositories  IProgressRepository  ← kayıt (bellek / PlayerPrefs-JSON / bulut)
 PixTrain.Core.Services      IRunService, IWorldGenService, ICargoService, IEconomyService,
                             IGarageService, IContractService
-PixTrain.Presentation       MonoBehaviour'lar: TrainView, TrackRenderer, LightingOverlay, HUD, Garage UI (sıradaki adım)
+PixTrain.Render             Yazılım piksel çizici: WorldRenderer, RunView, Scenery, SpriteLibrary (Unity'den bağımsız)
+PixTrain.Game               Unity sunum katmanı: GameController, GestureInput, SynthAudio, uGUI ekranları
 ```
 
 ### Faz 2: Backend (opsiyonel, canlı operasyon)

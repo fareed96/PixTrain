@@ -5,70 +5,94 @@ Proje klasörü: [`unity/PixTrain`](../unity/PixTrain)
 
 ## Katmanlar
 
-Oyun kuralları Unity'den tamamen bağımsızdır. Unity tarafı yalnızca görüntü, ses ve dokunmatik girdiyle ilgilenir.
+Üç derleme birimi (asmdef) vardır. İlk ikisi Unity'ye bağımlı değildir; bu yüzden Unity olmadan derlenip test edilebilir ve ekran görüntüsü üretebilir.
 
 ```
 unity/PixTrain/Assets/_Project/
 ├── Scripts/
-│   └── Core/                         PixTrain.Core.asmdef (noEngineReferences: Unity'ye bağımlı değil)
-│       ├── Data/                     Sabit içerik ve denge değerleri
-│       │   ├── GameBalance.cs        Tüm sayısal ayarlar (hız, yakıt, fiyat, turbo, seri…)
-│       │   ├── GameCatalog.cs        Şehir, hat, biyom, peron, geliştirme, lokomotif, sözleşme listeleri
-│       │   └── DefaultCatalog.cs     Prototipteki içeriğin aynısı
-│       ├── Models/                   PlayerProgress (kalıcı), RunState (sefer durumu), olaylar ve sonuçlar
-│       ├── Repositories/             IProgressRepository  →  InMemoryProgressRepository
-│       ├── Services/                 Arayüz + uygulama çiftleri
-│       │   ├── IRunService           Sefer: hareket, makas, peron, kaza, turbo, düdük, varış
-│       │   ├── IWorldGenService      Prosedürel hat: bölgeler, makaslar, peronlar, karşı trenler
-│       │   ├── ICargoService         Vagon yükleme, teslimat, kombo, kayıp
-│       │   ├── IEconomyService       Altın, şehir seviyesi, yıldız, hat geliri
-│       │   ├── IGarageService        Geliştirme ve lokomotif satın alma, tren özellikleri
-│       │   ├── IContractService      Sözleşme seçimi ve değerlendirme
-│       │   └── DayCycle              Gece/gündüz hesapları
-│       └── GameServices.cs           Kompozisyon kökü (servisleri bağımlılıklarıyla kurar)
-└── Tests/EditMode/                   NUnit testleri (Unity Test Runner + dotnet test)
+│   ├── Core/      PixTrain.Core    Oyun kuralları (Unity'den bağımsız)
+│   │   ├── Data/                   GameBalance (tüm sayısal ayarlar), GameCatalog, DefaultCatalog
+│   │   ├── Models/                 PlayerProgress (kalıcı), RunState (sefer durumu), olaylar, sonuçlar
+│   │   ├── Repositories/           IProgressRepository → InMemoryProgressRepository
+│   │   ├── Services/               IRunService, IWorldGenService, ICargoService, IEconomyService,
+│   │   │                           IGarageService, IContractService, DayCycle
+│   │   └── GameServices.cs         Kompozisyon kökü
+│   ├── Render/    PixTrain.Render  Piksel çizici (Unity'den bağımsız)
+│   │   ├── PixelImage, Palette     Yazılım tuvali (RGBA), Endesga 32 paleti
+│   │   ├── SpriteData/Library      Prototipten aktarılan sprite tabloları + kodla çizilenler
+│   │   ├── Scenery                 Bölgelerden manzara (ağaç, ev, bina, lamba, araba, tekne)
+│   │   ├── RunView                 Seferin görsel durumu: duman, kıvılcım, uçan yazılar, önbellek
+│   │   ├── WorldRenderer           Sahneyi 160 px genişlikte çizer: zemin, ray, tren, tünel, hava, gece ışığı
+│   │   └── UiArt                   Logo, şehir silüetleri, garaj önizlemesi, hareket okları
+│   └── Game/      PixTrain.Game    Unity sunum katmanı
+│       ├── GameBootstrap           Sahne boş; oyun koddan kurulur
+│       ├── GameController          Ekranlar, kare döngüsü, olay → ses/yazı/duyuru
+│       ├── GestureInput            Kaydırma: sol/sağ makas, aşağı düdük, yukarı turbo (Input System)
+│       ├── SynthAudio              Sesler açılışta sentezlenir (ses dosyası yok)
+│       ├── PlayerPrefsProgressRepository   Kayıt (JSON)
+│       └── UI/                     HUD, başlık, hat haritası + garaj, mola, sonuç (uGUI, koddan)
+├── Resources/Fonts/                Pixelify Sans (OFL), Türkçe karakterli piksel font
+├── Scenes/Main.unity               Boş açılış sahnesi
+└── Tests/EditMode/                 NUnit testleri (Unity Test Runner + dotnet test)
 ```
 
 Dashboard örneğindeki `IDashboardRepository → IDashboardService → Controller` düzeninin oyundaki karşılığı:
 
 | Katman | PixTrain'de |
 |---|---|
-| Repository | `IProgressRepository` (Unity'de PlayerPrefs/JSON, ileride bulut kaydı) |
+| Repository | `IProgressRepository` → `PlayerPrefsProgressRepository` (ileride bulut kaydı) |
 | Service | `IRunService`, `IEconomyService`, `IGarageService`… |
-| Controller / UI | Unity MonoBehaviour'ları (adım 3): servisleri çağırır, `RunState.Events` olaylarını ses ve efekte çevirir |
+| Controller / UI | `GameController` + `UI/*View`: servisleri çağırır, `RunState.Events` olaylarını ses ve efekte çevirir |
 
-Akış: Unity her karede `Runs.Tick(run, dt)` çağırır, `run` durumunu çizer, `run.Events` listesindeki olayları (altın, kaza, gece çöktü…) ses ve yazıya çevirir. Kaydırma hareketleri `Runs.Steer`, `Runs.Horn`, `Runs.Turbo` çağrılarına karşılık gelir.
+### Bir karede ne olur
 
-## Testler
+1. `GestureInput` hareketi okur → `Runs.Steer / Horn / Turbo`.
+2. `Runs.Tick(run, dt)` kuralları ilerletir; olaylar `run.Events` listesine düşer.
+3. `RunView` olaylardan uçan yazı ve kıvılcım üretir; `GameController` ses ve duyuru çalar.
+4. `WorldRenderer` sahneyi 160×(270–356) piksellik tuvale çizer; tuval tek bir dokuya yüklenip ekranı dolduracak şekilde, piksel bozulmadan büyütülür.
+5. HUD ve menüler uGUI ile, Pixelify Sans fontuyla çizilir.
 
-Kurallar katmanının testleri Unity olmadan çalışır:
+Sahne çizimi neden yazılımla? Görünüm prototiple birebir aynı kalır (ışık maskesi, kıvrılan vagonlar, palet), çizim Unity olmadan test edilip görüntülenebilir ve kare süresi yaklaşık 1 ms'dir.
+
+## Komutlar
 
 ```bash
+# Kurallar ve çizim testleri (69 test), Unity gerekmez
 dotnet test dotnet/PixTrain.sln
+
+# Oyun karelerini PNG olarak üret (Unity gerekmez): biyomlar, gece, tünel, varış, logo
+dotnet run -c Release --project dotnet/PixTrain.Snapshots -- cikti-klasoru
+
+# Unity katmanını gerçek Unity API'lerine karşı derle (lisans gerekmez, ayıklanmış Unity editörü gerekir)
+python3 tools/unity_compile_check.py /yol/Unity/Editor
+
+# Editör açmadan eklenen dosyalar için .meta üret
+python3 tools/unity_meta.py
+
+# Prototipteki sprite tablolarını Unity'ye aktar
+python3 tools/export_sprites.py
 ```
 
-- `dotnet/PixTrain.Core` Unity'deki `Scripts/Core` dosyalarını Unity ile aynı hedefle derler (.NET Standard 2.1, C# 9). Unity'de derlenmeyecek bir dil özelliği burada da hata verir.
-- `dotnet/PixTrain.Core.Tests` aynı test dosyalarını (`Tests/EditMode`) NUnit ile çalıştırır. Unity Test Runner'da da aynı testler koşar.
-- Rastgele sayı üreteci ve hash fonksiyonunun prototiple birebir aynı sonuç verdiği testle doğrulanır.
+## Neler doğrulandı, neler doğrulanmadı
+
+| Kontrol | Durum |
+|---|---|
+| Kurallar (Core) | 57 test |
+| Çizim (Render) | 12 test + PNG kareler (prototiple görsel karşılaştırma) |
+| Unity katmanı derleniyor mu | Evet: Unity 6000.3.27f1 DLL'leri, uGUI 2.0.0 ve Input System 1.20.1 kaynaklarına karşı 0 hata, 0 uyarı |
+| Unity'de çalışıyor mu (arayüz yerleşimi, dokunmatik, ses) | Henüz görülmedi; Unity'yi çalıştırmak lisans gerektiriyor. Adım 4'te GameCI ile WebGL derlenince tarayıcıda kontrol edilecek |
 
 ## Proje ayarları
 
 - Temel: Unity'nin resmi **Universal 2D** şablonu (URP 2D Renderer ayarları `Assets/Settings`).
 - Ürün adı ve şirket: PixTrain; paket kimliği `com.pixtrain.game` (yayından önce değiştirilebilir).
-- Ekran: yalnızca dikey (portrait).
+- Ekran: yalnızca dikey. Girdi: yeni Input System.
 - Paket sürümleri editörün kendi paketlerinden okundu (URP 17.3.0, Test Framework 1.6.0, Input System 1.20.1, uGUI 2.0.0).
 
 ## .meta dosyaları
 
-Unity her dosya için bir `.meta` ister. Editör açılmadan eklenen dosyalar için:
+Unity her dosya için bir `.meta` ister. GUID'ler dosya yolundan üretilir, yani her makinede aynıdır. Var olan `.meta` dosyalarına dokunulmaz.
 
-```bash
-python3 tools/unity_meta.py
-```
+## Sonraki adım
 
-GUID'ler dosya yolundan üretilir, yani her makinede aynıdır. Var olan `.meta` dosyalarına dokunulmaz.
-
-## Sonraki adımlar
-
-3. **Unity görsel katmanı:** tren, ray ve zemin çizimi, gece ışığı, arayüz, kaydırma kontrolleri, sesler (`Scripts/Presentation`).
 4. **GitHub Actions + GameCI:** her push'ta testler, WebGL ve Android derlemesi. Unity hesabı bilgileri GitHub repo secret'larına eklenmeli.

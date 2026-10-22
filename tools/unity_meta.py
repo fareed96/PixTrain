@@ -63,9 +63,32 @@ DefaultImporter:
   assetBundleVariant:
 """
 
-TEMPLATES = {".cs": SCRIPT, ".asmdef": ASMDEF, ".asmref": ASMDEF, ".md": TEXT, ".txt": TEXT, ".json": TEXT}
+FONT = """fileFormatVersion: 2
+guid: {guid}
+TrueTypeFontImporter:
+  externalObjects: {{}}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames: []
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+"""
+
+TEMPLATES = {".cs": SCRIPT, ".asmdef": ASMDEF, ".asmref": ASMDEF, ".md": TEXT, ".txt": TEXT, ".json": TEXT,
+             ".ttf": FONT, ".otf": FONT}
 # Bu uzantıların importer ayarları (doku, ses, sahne) Unity'ye bırakılır.
-SKIP = {".png", ".jpg", ".wav", ".ogg", ".mp3", ".unity", ".prefab", ".asset", ".mat", ".anim", ".controller"}
+SKIP = {".png", ".jpg", ".wav", ".ogg", ".mp3", ".prefab", ".asset", ".mat", ".anim", ".controller"}
 
 
 def guid_for(rel_path: str) -> str:

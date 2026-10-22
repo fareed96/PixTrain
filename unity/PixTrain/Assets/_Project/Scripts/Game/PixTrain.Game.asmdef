@@ -1,0 +1,19 @@
+{
+    "name": "PixTrain.Game",
+    "rootNamespace": "PixTrain.Game",
+    "references": [
+        "PixTrain.Core",
+        "PixTrain.Render",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

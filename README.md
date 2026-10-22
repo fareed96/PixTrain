@@ -11,15 +11,16 @@ Dikey ekranda oynanan, pixel art şehirlerarası tren oyunu. Tren kendi kendine 
 | Klasör | İçerik |
 |---|---|
 | `prototype/` | Tek dosyalık HTML5 prototip (tarayıcıda oynanır) |
-| `unity/PixTrain/` | Unity projesi; oyun kuralları `Assets/_Project/Scripts/Core` altında, Unity'den bağımsız C# |
-| `dotnet/` | Kurallar katmanını Unity olmadan derleyip test eden .NET projeleri |
-| `tools/` | Yardımcı betikler (Unity `.meta` üretimi) |
+| `unity/PixTrain/` | Unity projesi: `Core` (kurallar), `Render` (piksel çizici), `Game` (Unity arayüzü, girdi, ses) |
+| `dotnet/` | Core ve Render'ı Unity olmadan derleyen, test eden ve ekran görüntüsü üreten .NET projeleri |
+| `tools/` | Yardımcı betikler: `.meta` üretimi, sprite aktarımı, Unity'ye karşı derleme kontrolü |
 | `docs/` | Tasarım dokümanı ve Unity notları |
 
-Kuralların testlerini çalıştırmak için (.NET 8 SDK gerekir):
+Testler ve Unity olmadan oyun kareleri (.NET 8 SDK gerekir):
 
 ```bash
 dotnet test dotnet/PixTrain.sln
+dotnet run -c Release --project dotnet/PixTrain.Snapshots -- cikti-klasoru
 ```
 
 ## Prototipi çalıştırma
