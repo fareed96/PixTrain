@@ -1617,7 +1617,7 @@ function render(run) {
       ctx.fillStyle = P.S; ctx.fillRect(x - 12, s - 8, 3, 16); ctx.fillRect(x + 9, s - 8, 3, 16);
       ctx.fillStyle = P.Y; ctx.fillRect(x - 9, s - 8, 1, 16); ctx.fillRect(x + 8, s - 8, 1, 16);
     } else if (g.k === 'coin') {
-      ctx.drawImage(SPR.coin[Math.floor(t * 8 + g.y) % 4], x - (SPR.coin[Math.floor(t * 8 + g.y) % 4].width >> 1), s - 3);
+      ctx.drawImage(SPR.coin[Math.floor(t * 8 + g.y) & 3], x - (SPR.coin[Math.floor(t * 8 + g.y) & 3].width >> 1), s - 3);
     } else if (g.k === 'kaya') {
       if (g.hit) { ctx.drawImage(SPR.rock, x - 14, s - 2); ctx.drawImage(SPR.rock, x + 7, s - 4); }
       else ctx.drawImage(SPR.rockB, x - 5, s - 6);
@@ -1634,7 +1634,7 @@ function render(run) {
   for (const g of run.gates) {
     if (g.k !== 'inek' || g.gone) continue;
     if (g.y < yLo) continue; if (g.y > yHi + 20) break;
-    const fr = Math.floor(t * (g.flee ? 10 : 3)) % 2, s = sy(g.y);
+    const fr = Math.floor(t * (g.flee ? 10 : 3)) & 1, s = sy(g.y);
     ctx.drawImage(g.dir > 0 ? SPR.cow[fr] : SPR.cowL[fr], Math.round(g.x) - 5, s - 5);
   }
 
@@ -2140,7 +2140,11 @@ function drawLogo() {
 
 let last = performance.now();
 function frame(ts) {
-  const dt = Math.min(0.05, (ts - last) / 1000); last = ts;
+  requestAnimationFrame(frame);
+  try { step(ts); } catch (err) { console.error(err); }
+}
+function step(ts) {
+  const dt = clamp((ts - last) / 1000, 0, 0.05); last = ts;
   if (run) {
     if (mode === 'run' || mode === 'title' || mode === 'map') update(run, dt);
     else if (mode === 'result') { run.t += dt; for (const p of run.parts) p.t += dt; run.parts = run.parts.filter(p => p.t < p.life); }
@@ -2148,7 +2152,6 @@ function frame(ts) {
   const target = mode === 'map' ? Math.round(H * 0.34) : H - 92;
   TYf += (target - TYf) * Math.min(1, dt * 4); TY = Math.round(TYf);
   if (run) { render(run); updateHUD(); }
-  requestAnimationFrame(frame);
 }
 
 function boot() {
