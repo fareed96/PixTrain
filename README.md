@@ -13,10 +13,11 @@ Kurulum gerekmez. Dosyayı tarayıcıda aç ya da telefondan denemek için yerel
 npx serve prototype      # sonra telefondan http://<bilgisayar-ip>:3000
 ```
 
-| Kontrol | Mobil | Masaüstü |
+| Kontrol | Mobil (kaydırma) | Masaüstü |
 |---|---|---|
-| Makası sola / sağa çevir | Ekranın sol / sağ yarısına dokun | ← → veya A / D |
-| Düdük (inekleri kaçır) | DÜDÜK düğmesi | Boşluk |
+| Makası sola / sağa çevir | Parmağı sola / sağa kaydır | ← → veya A / D |
+| Düdük "düt düt" (inekleri kaçır) | Parmağı aşağı çek | ↓, S veya Boşluk |
+| Turbo | Parmağı yukarı it | ↑ veya W |
 | Mola | II | Esc |
 
 İlerleme tarayıcının `localStorage`'ında tutulur (`pixtrain.v1`).
@@ -26,7 +27,9 @@ npx serve prototype      # sonra telefondan http://<bilgisayar-ip>:3000
 - 6 hat, 7 şehir; her hat ayrı biyom (ova, orman, nehir, dağ, sahil, kar), prosedürel üretim
 - Üç şeritli hat, çift makaslı geçişler, vagonların rayın eğrisini takip etmesi
 - Yolcu, kömür ve gıda; kasaba, maden, çiftlik, şehir, fabrika ve yakıt peronları
-- Kırık ray, kaya ve inek tehlikeleri; düdük
+- Kırık ray, kaya, inek ve karşıdan gelen tren tehlikeleri; düdük
+- Turbo (altın ×2, yakıt ×2) ve kazasız seri çarpanı (×1.5'e kadar)
+- Dağ altından geçen tüneller, yağmurlu seferler
 - 2 dakikalık gün döngüsü, gece ışık maskesi, far konisi, yanan pencereler
 - Sözleşmeler, 3 yıldız, şehir büyümesi (Köy → Metropol)
 - Garaj: 5 geliştirme, 3 lokomotif (buharlı, dizel, elektrikli)

@@ -45,14 +45,16 @@ Oyuncu, terk edilmiş bir bölgesel demiryolu şirketini devralır. Elinde eski 
 
 ## 3. Kontroller (tek el, dikey)
 
-| Girdi | Etki |
-|---|---|
-| Ekranın **sol** yarısına dokun | Sıradaki makas bir adım sola (sağdaysa düze) |
-| Ekranın **sağ** yarısına dokun | Sıradaki makas bir adım sağa |
-| **DÜDÜK** düğmesi | Önündeki inekleri raydan kaçırır (6 sn bekleme) |
-| Klavye (masaüstü) | ← → / A D, Boşluk = düdük, Esc = mola |
+Ekranda düğme yok; her şey parmak hareketiyle yapılır.
 
-Tren kendi kendine gider. Oyuncu hız kontrol etmez, yalnızca **yön** ve **zamanlama** kararı verir. Bu, idle hissini korurken her 3–4 saniyede bir karar üretir.
+| Hareket | Etki |
+|---|---|
+| Parmağı **sola / sağa kaydır** | Sıradaki makas bir adım sola / sağa döner. Kaydırmaya devam edersen bir adım daha döner |
+| Parmağı **aşağı çek** | **Düt düt!** Düdük çalar, önündeki inekler raydan kaçar (6 sn bekleme) |
+| Parmağı **yukarı it** | **Turbo**: 2,6 sn hızlanma (10 sn bekleme) |
+| Klavye (masaüstü) | ← → / A D makas, ↓ / S / Boşluk düdük, ↑ / W turbo, Esc mola |
+
+Tren kendi kendine gider. Oyuncu yönü, düdüğün zamanını ve turbonun ne zaman kullanılacağını seçer. Bu, idle hissini korurken her 3–4 saniyede bir karar üretir. Ekranın alt köşelerindeki DÜDÜK ve TURBO göstergeleri bekleme süresini gösterir.
 
 ---
 
@@ -93,8 +95,9 @@ Her peronun üstünde **tahmini değer** yazar (`+3`, `DOLU`, `+54`). Oyuncu kar
 | Kırık ray | Şerit değiştir | Kırmızı flaşör yanar, uzaktan görünür |
 | Kaya | Şerit değiştir | Yalnızca far ışığında görünür |
 | İnek | Şerit değiştir **ya da düdük** | Yalnızca far ışığında görünür |
+| Karşıdan gelen tren | Şerit değiştir (ekran üstünde yanıp sönen **TREN** uyarısı + sesli uyarı) | Kendi farı yanar |
 
-Çarpma: 2 yük kaybı, −8 yakıt, kısa süreli yavaşlama, ekran sarsıntısı. Oyun bitmez.
+Çarpma: 2 yük kaybı, −8 yakıt, kısa süreli yavaşlama, ekran sarsıntısı. Oyun bitmez. Karşı trenle çarpışma daha ağırdır: 4 yük kaybı, −18 yakıt, daha uzun yavaşlama.
 
 ### 4.6 Gece ve gündüz
 - Gün döngüsü 2 dakikadır, yani her sefer en az bir gün dönümü görür.
@@ -129,6 +132,16 @@ Seviye arttığında sonuç ekranında **önce/sonra silüeti** gösterilir. Var
 | Mavi Şimşek (elektrikli) | 12★ + 4.000 altın | ×1.3 | ×0.6 | ×2 |
 
 Lokomotif değişimi **görsel bir ödüldür**: buhar dumanı yerine dizel egzozu, elektrikli lokomotifte pantograf kıvılcımı.
+
+### 4.10 Turbo
+Yukarı itince 2,6 saniye boyunca tren %60 hızlanır. Bu sürede toplanan altınlar ×2, peron teslimatları ×1.25 değerindedir, ama yakıt iki kat hızlı biter. Risk: hızlıyken makas kararları için daha az zaman kalır.
+
+### 4.11 Seri çarpanı
+Kazasız art arda başarılı peron (yük alma, teslimat, yakıt) seriyi büyütür. Her adım +%5, en fazla ×1.5. Çarpan altınlara ve teslimatlara uygulanır; herhangi bir kaza seriyi sıfırlar. 5. ve 10. adımda ekranda "SERİ" bildirimi çıkar.
+
+### 4.12 Tüneller ve hava
+- **Tünel** (orman, dağ, kar hatları): Tren dağın altına girer ve görünmez. Tünelin içinde makas ve peron yoktur; tünelin hemen ardından gelen makası önceden düşünmek gerekir.
+- **Yağmur** (ova, orman, nehir, sahil): Bazı seferler yağmurlu başlar ve sahne mavimsi bir ton alır.
 
 ---
 
@@ -196,9 +209,8 @@ Kurallar Unity'den bağımsız düz C# sınıfları olur. Prototipteki `update /
 
 ## 9. Sonraki denemeler (prototipte yok)
 
-- **Tünel:** İçeride görüş yok; oyuncu girişte gördüğü tabelaya göre karar verir.
-- **Karşı tren:** Tek hatlı kesimde sinyal; yanlış şeritte kalırsan kırmızı ışıkta beklersin.
+- **Sinyal:** Tek hatlı kesimde sinyal; yanlış şeritte kalırsan kırmızı ışıkta beklersin.
 - **Yolcu varış noktaları:** "Mavikent yolcusu" gibi hedefli yolcu, daha yüksek ücret.
-- **Hava durumu:** Yağmur (fren mesafesi), sis (görüş).
+- **Hava durumu oynanışı:** Yağmurda fren mesafesi, siste görüş kısıtı.
 - **Hat sahipliği:** Ara istasyonları satın alıp geliştirmek (idle çarpanı).
 - **Günlük görev ve sefer serisi:** Art arda 3 yıldız bonusu.
