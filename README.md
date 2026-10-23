@@ -5,16 +5,18 @@ Dikey ekranda oynanan, pixel art şehirlerarası tren oyunu. Tren kendi kendine 
 - **Tasarım dokümanı:** [`docs/GDD.md`](docs/GDD.md)
 - **Oynanabilir prototip:** [`prototype/index.html`](prototype/index.html)
 - **Unity projesi (Unity 6 LTS, C#):** [`unity/PixTrain`](unity/PixTrain); yapı ve komutlar [`docs/UNITY.md`](docs/UNITY.md)
+- **Mac'te yerel çalışma:** [`docs/LOCAL.md`](docs/LOCAL.md)
+- **Web'de yayın ve reklamlar (AdSense, ödüllü reklam, alan adı):** [`docs/ADS.md`](docs/ADS.md)
 
 ## Repo yapısı
 
 | Klasör | İçerik |
 |---|---|
 | `prototype/` | Tek dosyalık HTML5 prototip (tarayıcıda oynanır) |
-| `unity/PixTrain/` | Unity projesi: `Core` (kurallar), `Render` (piksel çizici), `Game` (Unity arayüzü, girdi, ses) |
+| `unity/PixTrain/` | Unity projesi: `Core` (kurallar), `Render` (piksel çizici), `Game` (Unity arayüzü, girdi, ses, reklam), `WebGLTemplates/PixTrain` (yayın sayfası) |
 | `dotnet/` | Core ve Render'ı Unity olmadan derleyen, test eden ve ekran görüntüsü üreten .NET projeleri |
-| `tools/` | Yardımcı betikler: `.meta` üretimi, sprite aktarımı, Unity'ye karşı derleme kontrolü |
-| `docs/` | Tasarım dokümanı ve Unity notları |
+| `tools/` | Yardımcı betikler: `.meta` üretimi, sprite aktarımı, Unity'ye karşı derleme kontrolü, WebGL tarayıcı duman testi |
+| `docs/` | Tasarım dokümanı, Unity notları, yerel kurulum, yayın ve reklam rehberi |
 
 Testler ve Unity olmadan oyun kareleri (.NET 8 SDK gerekir):
 

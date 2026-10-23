@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{{ PRODUCT_NAME }}} · Pixel art tren oyunu</title>
+    <meta name="description" content="PixTrain: dikey ekranda oynanan ücretsiz pixel art tren oyunu. Makası çevir, yolcu, kömür ve gıda taşı, gece gündüz şehirleri büyüt.">
+    <meta name="theme-color" content="#181425">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta property="og:title" content="{{{ PRODUCT_NAME }}}">
+    <meta property="og:description" content="Ücretsiz pixel art tren oyunu: makası çevir, şehirleri büyüt.">
+    <meta property="og:image" content="TemplateData/icon-512.png">
+    <link rel="icon" type="image/png" href="TemplateData/favicon.png">
+    <link rel="apple-touch-icon" href="TemplateData/icon-192.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="ads-config.js"></script>
+    <script src="TemplateData/ads.js"></script>
+  </head>
+  <body>
+    <div id="page">
+      <aside id="side-left" class="side">
+        <img class="side-logo" src="TemplateData/logo.png" alt="PixTrain" width="204" height="52">
+        <p class="lead">Dikey ekranda, şehirden şehre giden bir tren. Makası sen çeviriyorsun.</p>
+        <h2>Nasıl oynanır</h2>
+        <ul>
+          <li><b>Sola / sağa kaydır:</b> sıradaki makas döner (klavye: ← →).</li>
+          <li><b>Aşağı çek:</b> düt düt! İnekler raydan kaçar (↓ / boşluk).</li>
+          <li><b>Yukarı it:</b> turbo, altınlar ×2 (↑).</li>
+          <li>Mavi peron yolcu, gri maden kömür, yeşil çiftlik gıda verir.</li>
+          <li>Pembe şehir yolcu ve gıda, turuncu fabrika kömür satın alır.</li>
+          <li>Kırmızı peron yakıt. Yakıt biterse sefer biter.</li>
+        </ul>
+        <p class="note">Oyun ücretsizdir. İlerlemen bu tarayıcıda saklanır.</p>
+      </aside>
+
+      <main id="stage">
+        <div id="unity-container">
+          <canvas id="unity-canvas" tabindex="-1"></canvas>
+          <div id="loading">
+            <img src="TemplateData/logo.png" alt="PixTrain" width="204" height="52">
+            <div id="loading-bar"><div id="loading-fill"></div></div>
+            <div id="loading-text">Raylar döşeniyor…</div>
+          </div>
+          <div id="warning"></div>
+        </div>
+        <div id="ad-bottom" class="ad-slot" aria-label="Reklam"></div>
+      </main>
+
+      <aside id="side-right" class="side">
+        <div id="ad-side" class="ad-slot" aria-label="Reklam"></div>
+      </aside>
+    </div>
+
+    <footer id="footer">
+      <a href="privacy.html">Gizlilik ve çerezler</a>
+      <span>·</span>
+      <span>© PixTrain</span>
+    </footer>
+
+    <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loading = document.querySelector("#loading");
+      var loadingFill = document.querySelector("#loading-fill");
+      var loadingText = document.querySelector("#loading-text");
+      var warning = document.querySelector("#warning");
+
+      // Unity'nin uyarı ve hata mesajlarını sayfa içinde göster (alert kullanma).
+      function unityShowBanner(msg, type) {
+        var div = document.createElement("div");
+        div.textContent = msg;
+        div.className = type === "error" ? "warn error" : "warn";
+        warning.appendChild(div);
+        if (type !== "error") setTimeout(function () { div.remove(); }, 5000);
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_THREADS
+        workerUrl: buildUrl + "/{{{ WORKER_FILENAME }}}",
+#endif
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+      };
+
+      // Telefonda kaydırma ve yakınlaştırma sayfayı değil oyunu etkilesin.
+      document.addEventListener("touchmove", function (e) { if (e.target === canvas) e.preventDefault(); }, { passive: false });
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {
+          loadingFill.style.width = Math.round(100 * progress) + "%";
+          if (progress >= 0.9) loadingText.textContent = "Lokomotif ısınıyor…";
+        }).then(function (unityInstance) {
+          window.pixtrainUnity = unityInstance;
+          if (window.PixTrainAds) window.PixTrainAds.attach(unityInstance);
+          loading.style.display = "none";
+          canvas.focus();
+        }).catch(function (message) {
+          unityShowBanner("Oyun yüklenemedi: " + message, "error");
+        });
+      };
+      document.body.appendChild(script);
+
+      if ("serviceWorker" in navigator) { /* çevrimdışı önbellek ileride eklenecek */ }
+    </script>
+  </body>
+</html>

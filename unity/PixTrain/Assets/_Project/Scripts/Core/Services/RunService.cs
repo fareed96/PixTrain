@@ -24,6 +24,10 @@ namespace PixTrain.Core.Services
         float DeliveryMultiplier(RunState run);
         /// <summary>Oyuncu seferi yarıda bıraktı: kazanılan para korunur, ilerleme kaydedilir.</summary>
         void Abandon(RunState run);
+        /// <summary>Yakıtı biten ve duran trene yakıt verip sefere devam ettirir (ödüllü reklam sonrası).</summary>
+        bool ContinueRun(RunState run, float fuel);
+        /// <summary>Durmuş seferi bitirir (oyuncu devam etmek istemedi).</summary>
+        void GiveUp(RunState run);
     }
 
     public sealed class RunService : IRunService
@@ -127,6 +131,22 @@ namespace PixTrain.Core.Services
             return true;
         }
 
+        public bool ContinueRun(RunState run, float fuel)
+        {
+            if (!run.IsStalled || run.ContinueUsed) return false;
+            run.ContinueUsed = true;
+            run.Fuel = Math.Min(run.FuelMax, fuel);
+            run.WarnedFuelLow = false;
+            run.Phase = RunPhase.Running;
+            Emit(run, RunEventType.Continued, (int)run.Fuel);
+            return true;
+        }
+
+        public void GiveUp(RunState run)
+        {
+            if (run.IsStalled || run.Phase == RunPhase.OutOfFuel) Finish(run, false);
+        }
+
         public void Abandon(RunState run)
         {
             if (!run.IsAttract) _progress.Save();
@@ -193,14 +213,14 @@ namespace PixTrain.Core.Services
             if (dt <= 0f) return;
             run.Time += dt;
             float dayLength = run.IsAttract ? B.AttractDayLengthSeconds : B.DayLengthSeconds;
-            if (!run.IsFinished) run.TimeOfDay = (run.TimeOfDay + dt / dayLength) % 1f;
+            if (!run.IsFinished && !run.IsStalled) run.TimeOfDay = (run.TimeOfDay + dt / dayLength) % 1f;
             run.HornCooldown = Math.Max(0f, run.HornCooldown - dt);
             run.HornTimer = Math.Max(0f, run.HornTimer - dt);
             run.TurboTimer = Math.Max(0f, run.TurboTimer - dt);
             run.TurboCooldown = Math.Max(0f, run.TurboCooldown - dt);
             run.Shake = Math.Max(0f, run.Shake - dt);
 
-            if (!run.IsFinished)
+            if (!run.IsFinished && !run.IsStalled)
             {
                 Move(run, dt);
                 if (run.IsFinished) return;
@@ -246,7 +266,14 @@ namespace PixTrain.Core.Services
                     Emit(run, RunEventType.OutOfFuel);
                 }
             }
-            if (run.Phase == RunPhase.OutOfFuel && run.Speed < B.OutOfFuelStopSpeed) { Finish(run, false); return; }
+            if (run.Phase == RunPhase.OutOfFuel && run.Speed < B.OutOfFuelStopSpeed)
+            {
+                run.Speed = 0f;
+                if (run.IsAttract || run.ContinueUsed) { Finish(run, false); return; }
+                run.Phase = RunPhase.Stalled;
+                Emit(run, RunEventType.ContinueOffered);
+                return;
+            }
             if (!run.IsAttract && run.Y >= run.Length - 0.5f) { run.Y = run.Length; Finish(run, true); return; }
             if (!run.IsAttract && run.Y > run.Length - B.NearDestinationDistance && !run.WarnedNear)
             {

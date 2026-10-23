@@ -19,6 +19,7 @@ namespace PixTrain.Core
         public IContractService Contracts { get; private set; }
         public IWorldGenService World { get; private set; }
         public IRunService Runs { get; private set; }
+        public IRewardService Rewards { get; private set; }
 
         public static GameServices Create(IProgressRepository progress, ITimeProvider time = null, GameCatalog catalog = null)
         {
@@ -32,6 +33,7 @@ namespace PixTrain.Core
             var contracts = new ContractService(catalog);
             var world = new WorldGenService(catalog);
             var runs = new RunService(catalog, world, cargo, economy, garage, contracts, progress);
+            var rewards = new RewardService(catalog, progress, economy, runs, time);
 
             return new GameServices
             {
@@ -43,6 +45,7 @@ namespace PixTrain.Core
                 Contracts = contracts,
                 World = world,
                 Runs = runs,
+                Rewards = rewards,
             };
         }
     }

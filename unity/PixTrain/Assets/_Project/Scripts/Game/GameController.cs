@@ -1,7 +1,9 @@
 using PixTrain.Core;
 using PixTrain.Core.Data;
 using PixTrain.Core.Models;
+using PixTrain.Core.Services;
 using PixTrain.Core.Utils;
+using PixTrain.Game.Ads;
 using PixTrain.Game.UI;
 using PixTrain.Render;
 using UnityEngine;
@@ -42,6 +44,13 @@ namespace PixTrain.Game
         private ResultView _result;
         private SynthAudio _audio;
         private readonly GestureInput _input = new GestureInput();
+        private ContinueDialog _continue;
+        private TestAdOverlay _testOverlay;
+        private IAdProvider _ads;
+        private TestAdProvider _testAds = null;
+        private WebAdProvider _webAds = null;
+        private bool _adBusy;
+        private bool _giveUpPending;
 
         private Mode _mode;
         private int _height;
@@ -70,6 +79,7 @@ namespace PixTrain.Game
             _s = GameServices.Create(_repo, new SystemTimeProvider(), catalog);
             _renderer.ReduceMotion = false;
 
+            BuildAds();
             BuildCamera();
             BuildEventSystem();
             BuildCanvas();
@@ -80,6 +90,21 @@ namespace PixTrain.Game
             Layout(force: true);
             ToTitle();
             _trainY = _height - 92;
+        }
+
+        /// <summary>
+        /// WebGL'de reklamı sayfa gösterir (sayfada reklam kapalıysa düğmeler gizlenir);
+        /// editörde ve diğer platformlarda test reklamı kullanılır.
+        /// </summary>
+        private void BuildAds()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (WebAdProvider.PageHasAds()) { _webAds = new WebAdProvider(); _ads = _webAds; }
+            else _ads = new NoAdProvider();
+#else
+            _testAds = new TestAdProvider();
+            _ads = _testAds;
+#endif
         }
 
         private void BuildCamera()
@@ -128,9 +153,13 @@ namespace PixTrain.Game
 
             _hud = new HudView(_stage, Pause);
             _title = new TitleView(_stage, () => { _audio.Play(Sfx.Click); ToMap(); });
-            _map = new MapView(_stage, _s, StartRun, CollectIdle, ToggleMute, OnGarageChanged);
+            _map = new MapView(_stage, _s, StartRun, CollectIdle, ToggleMute, OnGarageChanged, CollectIdleDouble, ClaimDaily);
+            _map.AdsEnabled = _ads.RewardedEnabled;
             _pause = new PauseView(_stage, Resume, Quit);
             _result = new ResultView(_stage, _s);
+            _continue = new ContinueDialog(_stage, WatchForContinue, GiveUp);
+            _testOverlay = new TestAdOverlay(_stage, () => _testAds?.Skip());
+            if (_testAds != null) _testAds.Overlay = (visible, remaining) => _testOverlay.Set(visible, remaining);
         }
 
         /// <summary>Ekranı güvenli alana sığdırır; oyun genişliği 160 piksel, yükseklik telefona göre 270-356.</summary>
@@ -169,6 +198,8 @@ namespace PixTrain.Game
             _map.Visible = mode == Mode.Map;
             _pause.Visible = mode == Mode.Pause;
             _result.Visible = mode == Mode.Result;
+            if (mode != Mode.Run) _continue.Hide();
+            _ads.SetBanner(mode == Mode.Title || mode == Mode.Map || mode == Mode.Result);
             _input.Reset();
         }
 
@@ -205,7 +236,7 @@ namespace PixTrain.Game
             _hud.ResetCache();
             Show(Mode.Run);
             var c = _s.Catalog;
-            _hud.Banner(Texts.Upper(c.Biome(_run.Route.Biome).Name), c.Cities[route].Name + " → " + c.Cities[route + 1].Name + (_run.Raining ? " · yağmurlu" : ""));
+            _hud.Banner(Texts.Upper(c.Biome(_run.Route.Biome).Name), c.Cities[route].Name + " - " + c.Cities[route + 1].Name + (_run.Raining ? " · yağmurlu" : ""));
             bool tutorial = !_repo.Get().SeenTutorial;
             _tipIndex = tutorial ? 0 : Texts.Tips.Length;
             _tipTimer = 0f;
@@ -240,11 +271,105 @@ namespace PixTrain.Game
             _resultDelay = -1f;
             _hud.ShowTip(null);
             _hud.ShowHint(false);
-            var finished = _run;
+            ShowResultCard(_run, animate: true);
+            Show(Mode.Result);
+        }
+
+        private void ShowResultCard(RunState finished, bool animate)
+        {
+            UnityEngine.Events.UnityAction onDouble = null;
+            if (_ads.RewardedEnabled && _s.Rewards.CanOffer(RewardType.DoubleEarnings, finished))
+                onDouble = () => RequestReward(RewardType.DoubleEarnings, finished, amount =>
+                {
+                    _audio.Play(Sfx.Cash);
+                    ShowResultCard(finished, animate: false);
+                });
             _result.Show(finished,
                 () => { _audio.Play(Sfx.Click); _run = null; ToMap(); },
-                () => StartRun(finished.RouteIndex));
-            Show(Mode.Result);
+                () => StartRun(finished.RouteIndex),
+                onDouble, animate);
+        }
+
+        // ================================================================ ödüllü reklamlar
+
+        /// <summary>Oyuncu ödüllü reklamı seçti: reklamı göster, sonuna kadar izlenirse ödülü ver.</summary>
+        private void RequestReward(RewardType type, RunState run, System.Action<int> onGranted, System.Action onFailed = null)
+        {
+            if (_adBusy || !_ads.RewardedEnabled || !_s.Rewards.CanOffer(type, run)) { onFailed?.Invoke(); return; }
+            _adBusy = true;
+            AudioListener.pause = true;
+            _ads.ShowRewarded(type.ToString(), watched =>
+            {
+                _adBusy = false;
+                AudioListener.pause = false;
+                int amount = watched ? _s.Rewards.Grant(type, run) : 0;
+                if (amount > 0) onGranted(amount);
+                else onFailed?.Invoke();
+            });
+        }
+
+        private void WatchForContinue()
+        {
+            _continue.SetBusy(true);
+            RequestReward(RewardType.ContinueRun, _run,
+                amount => { _continue.Hide(); ProcessEvents(); },
+                () =>
+                {
+                    _continue.SetBusy(false);
+                    _continue.SetMessage("Reklam şu an gösterilemedi. Biraz sonra tekrar dene ya da seferi bitir.");
+                });
+        }
+
+        private void GiveUp()
+        {
+            _audio.Play(Sfx.Click);
+            _continue.Hide();
+            _s.Runs.GiveUp(_run);
+            ProcessEvents();
+        }
+
+        private void CollectIdleDouble() =>
+            RequestReward(RewardType.DoubleIdle, null, amount => { _audio.Play(Sfx.Cash); _map.RefreshCounters(); });
+
+        private void ClaimDaily() =>
+            RequestReward(RewardType.DailyCoins, null, amount => { _audio.Play(Sfx.Cash); _map.Rebuild(); _map.SelectTab(true); });
+
+        /// <summary>Sayfadan (JavaScript) gelen reklam sonucu: viewed | dismissed | unavailable.</summary>
+        public void OnAdResult(string result) => _webAds?.OnResult(result);
+
+        /// <summary>Sayfa reklam sırasında sesi kısar: "pause" | "resume".</summary>
+        public void OnAdAudio(string state) => AudioListener.pause = state == "pause";
+
+        /// <summary>
+        /// Tarayıcı duman testi (tools/webgl-smoke) için komutlar; SendMessage("PixTrain", "Automation", "...") ile çağrılır.
+        /// Oyuncuya avantaj sağlamaz: yalnızca açık hatlarda sefer başlatır, yakıtı bitirir, durumu konsola yazar.
+        /// </summary>
+        public void Automation(string command)
+        {
+            var parts = (command ?? "").Split(':');
+            switch (parts[0])
+            {
+                case "map":
+                    if (_mode == Mode.Title) ToMap();
+                    break;
+                case "run":
+                    if ((_mode == Mode.Map || _mode == Mode.Result) && parts.Length > 1 && int.TryParse(parts[1], out int route)
+                        && route >= 0 && route <= _repo.Get().UnlockedRoute) StartRun(route);
+                    break;
+                case "garage":
+                    if (_mode == Mode.Map) _map.SelectTab(true);
+                    break;
+                case "empty":
+                    if (_mode == Mode.Run && _run != null && !_run.IsFinished) _run.Fuel = 0f;
+                    break;
+                case "continue":
+                    if (_mode == Mode.Run && _run != null && _run.IsStalled) WatchForContinue();
+                    break;
+            }
+            var r = _run;
+            Debug.Log("[PixTrain] durum mode=" + _mode + " ads=" + _ads.GetType().Name
+                + (r == null ? "" : " phase=" + r.Phase + " attract=" + r.IsAttract + " fuel=" + r.Fuel.ToString("0.0") + " y=" + r.Y.ToString("0")
+                    + " earned=" + r.Earned.ToString("0") + " lane=" + r.Lane + " continueUsed=" + r.ContinueUsed));
         }
 
         private void CollectIdle()
@@ -278,6 +403,7 @@ namespace PixTrain.Game
         {
             float dt = Mathf.Min(Time.unscaledDeltaTime, MaxDelta);
             Layout(force: false);
+            _ads.Tick(Time.unscaledDeltaTime);
 
             switch (_mode)
             {
@@ -287,7 +413,8 @@ namespace PixTrain.Game
                     if (_mode == Mode.Map && (_counterTimer += dt) >= 1f) { _counterTimer = 0f; _map.RefreshCounters(); }
                     break;
                 case Mode.Run:
-                    HandleGesture(_input.Poll());
+                    if (_run.IsStalled) { if (_input.Poll() == Gesture.Pause) Pause(); }
+                    else HandleGesture(_input.Poll());
                     Step(dt);
                     UpdateTutorial(dt);
                     if (_resultDelay >= 0f && (_resultDelay -= dt) < 0f) ShowResult();
@@ -345,6 +472,13 @@ namespace PixTrain.Game
             if (!_run.IsAttract)
             {
                 foreach (var e in _run.Events) OnRunEvent(e);
+                if (_giveUpPending)
+                {
+                    _giveUpPending = false;
+                    _run.Events.Clear();
+                    _s.Runs.GiveUp(_run);
+                    foreach (var e in _run.Events) OnRunEvent(e);
+                }
                 if (_s.Catalog.Locomotives[_run.LocomotiveIndex].SpriteKey == "steam")
                 {
                     _chuffDistance += _run.Y - _lastY;
@@ -386,6 +520,14 @@ namespace PixTrain.Game
                     _hud.Banner(Texts.Upper(c.Cities[_run.RouteIndex + 1].Name) + " GÖRÜNDÜ", "Varışta tüm yük ×1,5 değerinde");
                     break;
                 case RunEventType.NightFell: _hud.Banner("GECE ÇÖKTÜ", "Yolcu ücreti ×1,5 · farın tek ışık"); break;
+                case RunEventType.ContinueOffered:
+                    if (_ads.RewardedEnabled) _continue.Show(_s.Rewards.Amount(RewardType.ContinueRun, _run));
+                    else _giveUpPending = true;
+                    break;
+                case RunEventType.Continued:
+                    _audio.Play(Sfx.Fuel);
+                    _hud.Banner("YOLA DEVAM!", "+" + e.Value + " yakıt");
+                    break;
                 case RunEventType.Finished:
                     if (_run.Result != null && _run.Result.Arrived && _run.FinalPay > 0) _audio.Play(Sfx.Cash);
                     _resultDelay = _run.Result != null && _run.Result.Arrived ? 0.9f : 0.3f;

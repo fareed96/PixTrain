@@ -1,0 +1,11 @@
+{
+  "name": "pixtrain-webgl-smoke",
+  "private": true,
+  "description": "PixTrain WebGL derlemesi için tarayıcı duman testi (CI)",
+  "scripts": {
+    "smoke": "node smoke.js"
+  },
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}

@@ -19,6 +19,9 @@ namespace PixTrain.Core.Models
         public long IdleCollectedUtcTicks;
         public bool SeenTutorial;
         public bool Muted;
+        /// <summary>Günlük ödül sayacı: gün numarası (UTC, 1970'ten beri) ve o gün alınan adet.</summary>
+        public int DailyRewardDay;
+        public int DailyRewardsClaimed;
 
         public static PlayerProgress CreateDefault(GameCatalog catalog, DateTime utcNow)
         {

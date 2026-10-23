@@ -218,8 +218,20 @@ namespace PixTrain.Core.Tests
             run.Y = 100f;
             run.Speed = 50f;
 
-            for (int i = 0; i < 400 && !run.IsFinished; i++) t.G.Runs.Tick(run, 0.05f);
+            bool offered = false;
+            for (int i = 0; i < 400 && !run.IsStalled; i++)
+            {
+                t.G.Runs.Tick(run, 0.05f);
+                offered |= Has(run, RunEventType.ContinueOffered);
+            }
 
+            Assert.That(run.IsStalled, Is.True, "tren durur ve devam teklifi bekler");
+            Assert.That(offered, Is.True);
+            float y = run.Y;
+            t.G.Runs.Tick(run, 1f);
+            Assert.That(run.Y, Is.EqualTo(y), "karar beklenirken tren kıpırdamaz");
+
+            t.G.Runs.GiveUp(run);
             Assert.That(run.IsFinished, Is.True);
             Assert.That(run.Result.Arrived, Is.False);
             Assert.That(run.Result.Stars, Is.EqualTo(0));
@@ -283,6 +295,7 @@ namespace PixTrain.Core.Tests
                 int ticks = 0;
                 while (!run.IsFinished && ticks < 20000)
                 {
+                    if (run.IsStalled) t.G.Runs.GiveUp(run);
                     if (ticks % 40 == 0) t.G.Runs.Steer(run, (ticks / 40) % 3 - 1);
                     t.G.Runs.Tick(run, 1f / 30f);
                     ticks++;

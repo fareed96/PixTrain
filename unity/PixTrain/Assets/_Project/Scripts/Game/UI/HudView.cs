@@ -188,7 +188,7 @@ namespace PixTrain.Game.UI
         {
             Set(_coins, Texts.Number(s.Economy.Coins));
             float progress = Mathf.Clamp01(run.Y / run.Length);
-            Set(_destination, "→ " + s.Catalog.Cities[run.RouteIndex + 1].Name);
+            Set(_destination, "Varış: " + s.Catalog.Cities[run.RouteIndex + 1].Name);
             Set(_km, Texts.Decimal1(Mathf.Max(0f, run.Length - run.Y) / 100f) + " km");
             _progressFill.anchorMax = new Vector2(progress, 1f);
             _progressMarker.anchorMin = _progressMarker.anchorMax = new Vector2(progress, 0.5f);

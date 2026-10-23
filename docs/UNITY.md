@@ -15,7 +15,7 @@ unity/PixTrain/Assets/_Project/
 │   │   ├── Models/                 PlayerProgress (kalıcı), RunState (sefer durumu), olaylar, sonuçlar
 │   │   ├── Repositories/           IProgressRepository → InMemoryProgressRepository
 │   │   ├── Services/               IRunService, IWorldGenService, ICargoService, IEconomyService,
-│   │   │                           IGarageService, IContractService, DayCycle
+│   │   │                           IGarageService, IContractService, IRewardService, DayCycle
 │   │   └── GameServices.cs         Kompozisyon kökü
 │   ├── Render/    PixTrain.Render  Piksel çizici (Unity'den bağımsız)
 │   │   ├── PixelImage, Palette     Yazılım tuvali (RGBA), Endesga 32 paleti
@@ -30,7 +30,9 @@ unity/PixTrain/Assets/_Project/
 │       ├── GestureInput            Kaydırma: sol/sağ makas, aşağı düdük, yukarı turbo (Input System)
 │       ├── SynthAudio              Sesler açılışta sentezlenir (ses dosyası yok)
 │       ├── PlayerPrefsProgressRepository   Kayıt (JSON)
-│       └── UI/                     HUD, başlık, hat haritası + garaj, mola, sonuç (uGUI, koddan)
+│       ├── Ads/                    IAdProvider: TestAdProvider (editör), WebAdProvider (sayfa köprüsü), NoAdProvider
+│       └── UI/                     HUD, başlık, hat haritası + garaj, mola, sonuç, yola devam penceresi (uGUI, koddan)
+├── Plugins/WebGL/PixTrainAds.jslib C# → sayfadaki window.PixTrainAds köprüsü
 ├── Resources/Fonts/                Pixelify Sans (OFL), Türkçe karakterli piksel font
 ├── Scenes/Main.unity               Boş açılış sahnesi
 └── Tests/EditMode/                 NUnit testleri (Unity Test Runner + dotnet test)
@@ -41,7 +43,7 @@ Dashboard örneğindeki `IDashboardRepository → IDashboardService → Controll
 | Katman | PixTrain'de |
 |---|---|
 | Repository | `IProgressRepository` → `PlayerPrefsProgressRepository` (ileride bulut kaydı) |
-| Service | `IRunService`, `IEconomyService`, `IGarageService`… |
+| Service | `IRunService`, `IEconomyService`, `IGarageService`, `IRewardService`… |
 | Controller / UI | `GameController` + `UI/*View`: servisleri çağırır, `RunState.Events` olaylarını ses ve efekte çevirir |
 
 ### Bir karede ne olur
@@ -57,7 +59,7 @@ Sahne çizimi neden yazılımla? Görünüm prototiple birebir aynı kalır (ı�
 ## Komutlar
 
 ```bash
-# Kurallar ve çizim testleri (69 test), Unity gerekmez
+# Kurallar ve çizim testleri (75 test), Unity gerekmez
 dotnet test dotnet/PixTrain.sln
 
 # Oyun karelerini PNG olarak üret (Unity gerekmez): biyomlar, gece, tünel, varış, logo
@@ -77,16 +79,19 @@ python3 tools/export_sprites.py
 
 | Kontrol | Durum |
 |---|---|
-| Kurallar (Core) | 57 test |
+| Kurallar (Core) | 63 test (ödüllü reklam kuralları dahil) |
 | Çizim (Render) | 12 test + PNG kareler (prototiple görsel karşılaştırma) |
 | Unity katmanı derleniyor mu | Evet: Unity 6000.3.27f1 DLL'leri, uGUI 2.0.0 ve Input System 1.20.1 kaynaklarına karşı 0 hata, 0 uyarı |
-| Unity'de çalışıyor mu (arayüz yerleşimi, dokunmatik, ses) | Henüz görülmedi; Unity'yi çalıştırmak lisans gerektiriyor. Adım 4'te GameCI ile WebGL derlenince tarayıcıda kontrol edilecek |
+| Unity içinde testler | CI'da Unity 6000.3.27f1 EditMode: tüm testler geçiyor |
+| WebGL ve Android derlemesi | CI'da GameCI ile |
+| Tarayıcıda çalışıyor mu | CI'daki duman testi: başsız Chromium, telefon boyutu; başlık → hat → sefer → kaydırma → yakıt biter → test reklamı → yola devam. Ekran görüntüleri `PixTrain-duman-testi` çıktısında |
 
 ## Proje ayarları
 
 - Temel: Unity'nin resmi **Universal 2D** şablonu (URP 2D Renderer ayarları `Assets/Settings`).
 - Ürün adı ve şirket: PixTrain; paket kimliği `com.pixtrain.game` (yayından önce değiştirilebilir).
 - Ekran: yalnızca dikey. Girdi: yeni Input System.
+- WebGL: sayfa şablonu `PixTrain` (`Assets/WebGLTemplates/PixTrain`), sıkıştırma kapalı. Reklam ayarları: [`docs/ADS.md`](ADS.md).
 - Paket sürümleri editörün kendi paketlerinden okundu (URP 17.3.0, Test Framework 1.6.0, Input System 1.20.1, uGUI 2.0.0).
 
 ## .meta dosyaları
@@ -101,7 +106,7 @@ Unity her dosya için bir `.meta` ister. GUID'ler dosya yolundan üretilir, yani
 |---|---|---|
 | Kurallar ve çizim testleri (.NET) | `dotnet test`, oyun karelerini PNG üretir | `PixTrain-kareler` |
 | Unity EditMode testleri | Aynı testler Unity 6000.3.27f1 içinde | `Unity-test-sonuclari` |
-| Derleme (WebGL) | Tarayıcı sürümü (sıkıştırmasız, her sunucuda açılır) | `PixTrain-WebGL` |
+| Derleme (WebGL) | Tarayıcı sürümü (sıkıştırmasız, her sunucuda açılır, `WebGLTemplates/PixTrain` sayfasıyla) + tarayıcı duman testi | `PixTrain-WebGL`, `PixTrain-duman-testi` |
 | Derleme (Android) | IL2CPP, ARM64 APK (debug imzalı, telefona doğrudan kurulur) | `PixTrain-Android` |
 | GitHub Pages | WebGL'i yayınlar; yalnızca `DEPLOY_PAGES` repo değişkeni `true` ise | Pages adresi |
 

@@ -172,9 +172,13 @@ Her sefer prosedürel üretilir: kır, kasaba, şehir ve nehir bölgeleri sıray
 
 ---
 
-## 7. Mobil iş modeli (öneri)
+## 7. İş modeli
 
-- Ücretsiz + reklam: "Hat gelirini 2× topla" ödüllü reklamı; sefer sonu "yükünü kurtar" (çarpışmada kaybı geri al).
+Oyun kendi alan adında ücretsiz yayınlanır (web, telefon ve masaüstü tarayıcı). Gelir yalnızca reklam; satın alma yok. Ayrıntılar ve yayın adımları: [`docs/ADS.md`](ADS.md).
+
+- **Banner:** yalnızca menülerde (başlık, hat haritası, sonuç). Sefer sırasında kapalı; oyunun üstüne binmez. Masaüstünde yan sütunda.
+- **Ödüllü reklam (isteğe bağlı):** yakıt bitince "yola devam" (deponun yarısı, sefer başına 1), sefer sonu "kazancı 2× al", "hat gelirini 2× topla", garajda "günlük altın paketi" (günde 3).
+- **Geçiş reklamı yok.** Ödüller oyun içidir, gerçek para değeri yoktur.
 - Kozmetik: lokomotif boyaları, vagon desenleri, şehir temaları (bayram ışıkları vb.).
 - Sezonluk hatlar: yeni biyom + sınırlı süreli lokomotif.
 - Kaçınılacak: enerji/bekleme duvarı. Idle zaten doğal bir "geri gel" sebebi.
@@ -192,9 +196,11 @@ HTML5 Canvas, tek dosya. Amaç: görsel dil, makas mekaniği ve ekonomi hissini 
 - ✅ Unity proje iskeleti (`unity/PixTrain`): Unity'nin Universal 2D şablonu, editörle gelen paket sürümleri, dikey ekran.
 - ✅ Kurallar katmanı (`PixTrain.Core`, Unity'den bağımsız): prototipteki bütün kurallar C#'a taşındı.
 - ✅ Görsel katman: sahne prototiple aynı görünümde yazılım piksel çiziciyle çizilir; HUD ve menüler uGUI, kaydırma kontrolleri Input System, sesler kodla sentezlenir.
-- ✅ 69 NUnit testi; `dotnet test dotnet/PixTrain.sln` ile Unity olmadan, Unity Test Runner'da da çalışır. Unity katmanı gerçek Unity API'lerine karşı hatasız derlenir.
-- ⬜ Unity'de çalışırken görülmesi (lisans + derleme hattı ile).
-- ⬜ GitHub Actions + GameCI: WebGL ve Android derlemesi.
+- ✅ 75 NUnit testi; `dotnet test dotnet/PixTrain.sln` ile Unity olmadan, Unity Test Runner'da da çalışır. Unity katmanı gerçek Unity API'lerine karşı hatasız derlenir.
+- ✅ GitHub Actions + GameCI: Unity içinde testler, WebGL ve Android derlemesi, WebGL tarayıcı duman testi.
+- ✅ Ödüllü reklam kuralları (`IRewardService`) ve reklam katmanı (editörde test reklamı, web'de Google H5 Games Ads + AdSense).
+- ✅ Web yayın sayfası (`WebGLTemplates/PixTrain`): telefon ve masaüstü düzeni, gizlilik sayfası, ana ekrana ekle.
+- ⬜ Alan adı, AdSense onayı, H5 Games Ads onayı (bkz. [`docs/ADS.md`](ADS.md)).
 
 Katmanlı (N-tier) yapı:
 
@@ -202,9 +208,9 @@ Katmanlı (N-tier) yapı:
 PixTrain.Core.Data          GameBalance, GameCatalog (şehir, hat, biyom, peron, geliştirme, lokomotif, sözleşme)
 PixTrain.Core.Repositories  IProgressRepository  ← kayıt (bellek / PlayerPrefs-JSON / bulut)
 PixTrain.Core.Services      IRunService, IWorldGenService, ICargoService, IEconomyService,
-                            IGarageService, IContractService
+                            IGarageService, IContractService, IRewardService
 PixTrain.Render             Yazılım piksel çizici: WorldRenderer, RunView, Scenery, SpriteLibrary (Unity'den bağımsız)
-PixTrain.Game               Unity sunum katmanı: GameController, GestureInput, SynthAudio, uGUI ekranları
+PixTrain.Game               Unity sunum katmanı: GameController, GestureInput, SynthAudio, uGUI ekranları, IAdProvider
 ```
 
 ### Faz 2: Backend (opsiyonel, canlı operasyon)

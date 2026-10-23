@@ -1,0 +1,4 @@
+# AdSense onayı geldikten sonra aşağıdaki satırın başındaki # işaretini kaldır ve pub-XXXXXXXXXXXXXXXX yerine
+# kendi yayıncı kimliğini yaz (AdSense > Siteler > ads.txt sana bu satırı hazır verir).
+# Bu dosya sitenin kökünde olmalı: https://ALAN-ADIN/ads.txt
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

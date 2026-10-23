@@ -80,6 +80,12 @@ namespace PixTrain.Core.Data
         public float IdleCapMinutes = 240f;
         public int StartCoins = 150;
 
+        // Ödüllü reklamlar (hepsi isteğe bağlı; reklamsız da oyun bitirilebilir)
+        public float ContinueFuelFraction = 0.5f;
+        public int DailyRewardLimit = 3;
+        public int DailyCoinsBase = 80;
+        public int DailyCoinsPerRoute = 40;
+
         // Dünya üretimi
         public float StationZoneStart = -420f;
         public float StationZoneLength = 620f;

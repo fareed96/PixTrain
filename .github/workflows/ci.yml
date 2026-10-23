@@ -74,7 +74,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Unity EditMode testleri
+          checkName: Unity test raporu
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -122,6 +122,29 @@ jobs:
         with:
           name: PixTrain-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
+
+      # WebGL: derlemeyi başsız Chromium'da açıp başlık -> hat -> sefer -> test reklamıyla devam akışını dener.
+      - uses: actions/setup-node@v4
+        if: matrix.targetPlatform == 'WebGL'
+        with:
+          node-version: '22'
+
+      - name: Tarayıcı duman testi (WebGL)
+        if: matrix.targetPlatform == 'WebGL'
+        working-directory: tools/webgl-smoke
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8080 -d "$GITHUB_WORKSPACE/build/WebGL/PixTrain" > /dev/null 2>&1 &
+          sleep 2
+          node smoke.js "http://localhost:8080/?ads=test" "$GITHUB_WORKSPACE/smoke" --print-shots
+
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.targetPlatform == 'WebGL'
+        with:
+          name: PixTrain-duman-testi
+          path: smoke
+          if-no-files-found: ignore
 
   pages:
     name: GitHub Pages (WebGL)

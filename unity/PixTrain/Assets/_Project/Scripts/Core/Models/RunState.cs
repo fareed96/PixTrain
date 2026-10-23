@@ -70,6 +70,8 @@ namespace PixTrain.Core.Models
         public float TurboCooldown;
 
         public bool WarnedFuelLow;
+        /// <summary>Yakıt bitince reklamla devam hakkı kullanıldı mı (sefer başına bir kez).</summary>
+        public bool ContinueUsed;
         public bool WarnedNear;
         public bool WasNight;
         public float CleanupTimer;
@@ -80,6 +82,7 @@ namespace PixTrain.Core.Models
 
         public bool IsTurbo => TurboTimer > 0f;
         public bool IsFinished => Phase == RunPhase.Finished;
+        public bool IsStalled => Phase == RunPhase.Stalled;
         public float Progress => IsAttract ? 0f : Y / Length;
         public int DeliveredCount(CargoType c) => Delivered[(int)c];
     }

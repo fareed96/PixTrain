@@ -85,7 +85,41 @@ TrueTypeFontImporter:
   assetBundleVariant: 
 """
 
-TEMPLATES = {".cs": SCRIPT, ".asmdef": ASMDEF, ".asmref": ASMDEF, ".md": TEXT, ".txt": TEXT, ".json": TEXT,
+JSLIB = """fileFormatVersion: 2
+guid: {guid}
+PluginImporter:
+  externalObjects: {{}}
+  serializedVersion: 2
+  iconMap: {{}}
+  executionOrder: {{}}
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
+  platformData:
+  - first:
+      Any: 
+    second:
+      enabled: 0
+      settings: {{}}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+  - first:
+      WebGL: WebGL
+    second:
+      enabled: 1
+      settings: {{}}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+"""
+
+TEMPLATES = {".jslib": JSLIB, ".cs": SCRIPT, ".asmdef": ASMDEF, ".asmref": ASMDEF, ".md": TEXT, ".txt": TEXT, ".json": TEXT,
              ".ttf": FONT, ".otf": FONT}
 # Bu uzantıların importer ayarları (doku, ses, sahne) Unity'ye bırakılır.
 SKIP = {".png", ".jpg", ".wav", ".ogg", ".mp3", ".prefab", ".asset", ".mat", ".anim", ".controller"}

@@ -1,0 +1,174 @@
+/* PixTrain sayfa düzeni
+   Telefon: oyun tüm ekranı kaplar; menülerde altta banner açılır, sefer sırasında kapanır.
+   Masaüstü: ortada dikey oyun sütunu, solda oyun bilgisi, sağda dikey banner. */
+:root {
+  --night: #181425;
+  --panel: #262b44;
+  --line: #3a4466;
+  --ink: #ead4aa;
+  --mute: #8b9bb4;
+  --gold: #feae34;
+  --gold2: #fee761;
+  --banner-h: 60px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--night);
+  color: var(--ink);
+  font: 15px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#page {
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 24px;
+}
+
+/* ---------------- oyun sütunu ---------------- */
+#stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: min(100vw, calc(100dvh * 0.5625));
+  flex: none;
+}
+
+#unity-container {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+
+#unity-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  outline: none;
+  background: var(--night);
+}
+
+#loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--night);
+}
+#loading img { image-rendering: pixelated; width: 204px; height: auto; }
+#loading-bar {
+  width: 180px;
+  height: 12px;
+  background: var(--panel);
+  box-shadow: 0 0 0 3px var(--night), 0 0 0 5px var(--line);
+}
+#loading-fill { width: 0; height: 100%; background: var(--gold); transition: width .2s steps(4); }
+#loading-text { color: var(--mute); font-size: 13px; }
+
+#warning { position: absolute; left: 8px; right: 8px; top: 8px; display: grid; gap: 6px; pointer-events: none; }
+.warn { background: #fee761; color: #181425; padding: 6px 10px; font-size: 13px; }
+.warn.error { background: #e43b44; color: #fff; }
+
+/* ---------------- reklam alanları ---------------- */
+.ad-slot { display: none; }
+.ad-slot.ready { display: flex; align-items: center; justify-content: center; }
+
+/* Mobil alt banner: yalnızca menülerde (body.banner-on). Oyun alanı kısalır, üstüne binmez. */
+#ad-bottom {
+  height: var(--banner-h);
+  flex: none;
+  border-top: 2px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+body:not(.banner-on) #ad-bottom { display: none; }
+
+/* Test modunda reklam yerine yer tutucu */
+.ad-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--mute);
+  font-size: 12px;
+  letter-spacing: .08em;
+  border: 2px dashed var(--line);
+}
+
+/* ---------------- yan sütunlar (masaüstü) ---------------- */
+.side { display: none; }
+
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+  .side {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    padding: 32px 0;
+    overflow: auto;
+  }
+  #side-left h2 { font-size: 15px; color: var(--gold2); margin: 20px 0 6px; letter-spacing: .06em; }
+  #side-left ul { padding-left: 18px; margin: 0; color: var(--ink); }
+  #side-left li { margin-bottom: 6px; }
+  #side-left .lead { color: var(--ink); }
+  #side-left .note { color: var(--mute); font-size: 13px; margin-top: 18px; }
+  .side-logo { image-rendering: pixelated; width: 204px; height: auto; }
+  #ad-side.ready { width: 300px; min-height: 600px; }
+  /* Masaüstünde alt banner yerine yan banner kullanılır */
+  #ad-bottom { display: none !important; }
+}
+
+#footer {
+  position: fixed;
+  right: 12px;
+  bottom: 6px;
+  display: none;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mute);
+}
+#footer a { color: var(--mute); }
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) { #footer { display: flex; } }
+
+/* ---------------- test reklamı ---------------- */
+#test-ad {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(10, 8, 20, .96);
+  text-align: center;
+  padding: 24px;
+}
+#test-ad.on { display: flex; }
+#test-ad b { color: var(--gold2); font-size: 22px; letter-spacing: .1em; }
+#test-ad .count { font-size: 44px; }
+#test-ad button {
+  font: inherit;
+  background: var(--panel);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+}

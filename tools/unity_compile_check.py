@@ -79,17 +79,23 @@ def main():
                                 f'<Compile Include="{inputsystem}/**/*.cs" Exclude="{inputsystem}/Editor/**/*.cs;{inputsystem}/Runtime/Plugins/InputForUI/**/*.cs" />')
     with open(os.path.join(work, "inputsystem.csproj"), "w") as f:
         f.write(text)
-    project(os.path.join(work, "game.csproj"), "PixTrain.Game",
-            [os.path.join(ROOT, "unity/PixTrain/Assets/_Project/Scripts/Game/**/*.cs")], "UNITY_ANDROID",
-            refs=["ugui.csproj", "inputsystem.csproj",
-                  os.path.join(ROOT, "dotnet/PixTrain.Core/PixTrain.Core.csproj"),
-                  os.path.join(ROOT, "dotnet/PixTrain.Render/PixTrain.Render.csproj")],
-            quiet=False)
-    result = subprocess.run(["dotnet", "build", os.path.join(work, "game.csproj"), "-nologo"],
-                            capture_output=True, text=True)
-    lines = [l for l in result.stdout.splitlines() if " error " in l or " warning " in l or "Warning(s)" in l or "Error(s)" in l]
-    print("\n".join(dict.fromkeys(lines)))
-    sys.exit(result.returncode)
+    code = 0
+    # Her hedef platformun tanımlarıyla ayrı derle (#if UNITY_WEBGL gibi dallar da kontrol edilsin).
+    for platform in ("UNITY_ANDROID", "UNITY_WEBGL"):
+        name = "game-" + platform.lower() + ".csproj"
+        project(os.path.join(work, name), "PixTrain.Game",
+                [os.path.join(ROOT, "unity/PixTrain/Assets/_Project/Scripts/Game/**/*.cs")], platform,
+                refs=["ugui.csproj", "inputsystem.csproj",
+                      os.path.join(ROOT, "dotnet/PixTrain.Core/PixTrain.Core.csproj"),
+                      os.path.join(ROOT, "dotnet/PixTrain.Render/PixTrain.Render.csproj")],
+                quiet=False)
+        result = subprocess.run(["dotnet", "build", os.path.join(work, name), "-nologo"],
+                                capture_output=True, text=True)
+        lines = [l for l in result.stdout.splitlines() if " error " in l or " warning " in l or "Warning(s)" in l or "Error(s)" in l]
+        print("== " + platform)
+        print("\n".join(dict.fromkeys(lines)))
+        code = code or result.returncode
+    sys.exit(code)
 
 
 if __name__ == "__main__":

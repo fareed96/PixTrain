@@ -1,0 +1,16 @@
+{
+  "name": "PixTrain",
+  "short_name": "PixTrain",
+  "description": "Ücretsiz pixel art tren oyunu: makası çevir, şehirleri büyüt.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#181425",
+  "theme_color": "#181425",
+  "icons": [
+    { "src": "TemplateData/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "TemplateData/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

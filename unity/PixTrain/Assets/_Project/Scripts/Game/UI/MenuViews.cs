@@ -2,6 +2,7 @@ using System;
 using PixTrain.Core;
 using PixTrain.Core.Data;
 using PixTrain.Core.Models;
+using PixTrain.Core.Services;
 using PixTrain.Render;
 using UnityEngine;
 using UnityEngine.Events;
@@ -102,13 +103,19 @@ namespace PixTrain.Game.UI
         private readonly Action<int> _onStartRoute;
         private readonly Action _onChanged;
         private readonly Text _coins, _stars, _rate, _pending;
-        private readonly Button _collect, _mute;
+        private readonly Button _collect, _collectDouble, _mute;
+        private readonly Action _onDaily;
+
+        /// <summary>Ödüllü reklam düğmeleri gösterilsin mi.</summary>
+        public bool AdsEnabled;
         private readonly Button _tabLine, _tabGarage;
         private readonly RectTransform _lineScroll, _lineContent, _garageScroll, _garageContent;
         private bool _garage;
 
-        public MapView(Transform stage, GameServices services, Action<int> onStartRoute, Action onCollect, Action onMute, Action onChanged)
+        public MapView(Transform stage, GameServices services, Action<int> onStartRoute, Action onCollect, Action onMute, Action onChanged,
+            Action onCollectDouble, Action onDaily)
         {
+            _onDaily = onDaily;
             _s = services;
             _onStartRoute = onStartRoute;
             _onChanged = onChanged;
@@ -142,8 +149,10 @@ namespace PixTrain.Game.UI
             _rate = Ui.Label(rateRow.transform, "0/dk", 5.5f, Ui.Ink, TextAnchor.MiddleLeft, bold: true);
             Ui.Label(rateRow.transform, " · biriken ", 5.5f, Ui.Ink);
             _pending = Ui.Label(rateRow.transform, "0", 5.5f, Ui.Gold2, TextAnchor.MiddleLeft, bold: true);
-            _collect = Ui.Button(idle.transform, "TOPLA", () => onCollect(), ButtonKind.Gold, 5);
-            _collect.Size(30, 12);
+            _collect = Ui.Button(idle.transform, "TOPLA", () => onCollect(), ButtonKind.Ghost, 5);
+            _collect.Size(24, 12);
+            _collectDouble = MenuKit.IconButton(idle.transform, "coin", "2× TOPLA", () => onCollectDouble(), ButtonKind.Gold, 4.6f);
+            _collectDouble.Size(34, 12);
 
             var tabs = Ui.Row(sheet.transform, "sekmeler", 2, TextAnchor.MiddleCenter);
             tabs.GetComponent<RectTransform>().Band(true, 3, 3, 26, 11);
@@ -187,6 +196,8 @@ namespace PixTrain.Game.UI
             int pending = _s.Economy.IdlePending();
             _pending.text = Texts.Number(pending);
             _collect.interactable = pending > 0;
+            _collectDouble.gameObject.SetActive(AdsEnabled);
+            _collectDouble.interactable = pending > 0 && _s.Rewards.CanOffer(RewardType.DoubleIdle);
             Ui.SetButton(_mute, p.Muted ? "SES: KAPALI" : "SES: AÇIK", true);
         }
 
@@ -245,6 +256,21 @@ namespace PixTrain.Game.UI
             var p = _s.Progress.Get();
             var catalog = _s.Catalog;
             var garage = _s.Garage;
+
+            if (AdsEnabled)
+            {
+                int left = _s.Rewards.DailyRemaining();
+                var daily = Ui.Row(_garageContent, "günlük", 2, TextAnchor.MiddleLeft, 2.5f);
+                MenuKit.Card(daily.transform, "kart", left > 0);
+                Ui.Icon(daily.transform, "coin", 7);
+                var info = Ui.Column(daily.transform, "bilgi", 0.6f);
+                info.Size(flexW: 1);
+                Ui.Label(info.transform, "Günlük altın paketi", 5, Ui.Ink, TextAnchor.MiddleLeft, bold: true);
+                Ui.Label(info.transform, "+" + Texts.Number(_s.Rewards.Amount(RewardType.DailyCoins)) + " altın · bugün kalan " + left + "/" + catalog.Balance.DailyRewardLimit, 4.2f, Ui.Mute);
+                var watch = Ui.Button(daily.transform, left > 0 ? "REKLAM İZLE" : "YARIN", () => _onDaily(), ButtonKind.Gold, 4.4f);
+                watch.interactable = left > 0;
+                watch.Size(38, 11);
+            }
 
             var top = Ui.Row(_garageContent, "üst", 3, TextAnchor.UpperLeft);
             var spec = garage.BuildTrainSpec();
@@ -393,7 +419,7 @@ namespace PixTrain.Game.UI
 
         public bool Visible { set => Root.gameObject.SetActive(value); }
 
-        public void Show(RunState run, UnityAction onBack, UnityAction onAgain)
+        public void Show(RunState run, UnityAction onBack, UnityAction onAgain, UnityAction onDouble = null, bool animateStars = true)
         {
             var r = run.Result;
             Ui.Clear(_card);
@@ -407,9 +433,9 @@ namespace PixTrain.Game.UI
             for (int i = 0; i < 3; i++)
             {
                 _stars[i] = Ui.Picture(starRow.transform, "yıldız", SpriteLibrary.Instance.Icons[i < r.Stars ? "star" : "starOff"], 16f / 7f);
-                if (i < r.Stars) _stars[i].rectTransform.localScale = Vector3.zero;
+                if (i < r.Stars && animateStars) _stars[i].rectTransform.localScale = Vector3.zero;
             }
-            _starCount = r.Stars;
+            _starCount = animateStars ? r.Stars : 0;
             _time = 0f;
 
             Line("Yol boyu teslimat ve altın", Texts.Number(r.RouteEarnings), Ui.Ink);
@@ -417,7 +443,13 @@ namespace PixTrain.Game.UI
             Line("Kaza", r.Crashes.ToString(), Ui.Ink);
             foreach (var c in r.Contracts) Line(c.Title, c.Completed ? "tamam" : "olmadı", c.Completed ? Ui.Green : Ui.Red);
             Ui.Box(_card, "çizgi", Ui.Line).Size(-1, 0.6f);
-            Line("Toplam kazanç", Texts.Number(r.Earned), Ui.Gold2, true);
+            if (r.EarningsDoubled) Line("Reklam ödülü ×2", "+" + Texts.Number(r.BonusEarned), Ui.Green);
+            Line("Toplam kazanç", Texts.Number(r.TotalEarned), Ui.Gold2, true);
+            if (onDouble != null)
+            {
+                var dbl = MenuKit.IconButton(_card, "coin", "KAZANCI 2× AL (REKLAM)", onDouble, ButtonKind.Gold, 5f);
+                dbl.Size(-1, 13);
+            }
 
             if (r.Arrived && r.CityGrew)
             {
@@ -428,7 +460,7 @@ namespace PixTrain.Game.UI
                 Ui.Picture(pics.transform, "önce", UiArt.CitySkyline(r.CityLevelBefore, r.CityIndex), 1f);
                 Ui.Picture(pics.transform, "ok", GestureArt.Arrow(1), 1f);
                 Ui.Picture(pics.transform, "sonra", UiArt.CitySkyline(r.CityLevelAfter, r.CityIndex), 1f);
-                Ui.Label(grow.transform, city + " büyüdü: " + catalog.CityLevelNames[r.CityLevelBefore] + " → <color=#fee761><b>" + catalog.CityLevelNames[r.CityLevelAfter] + "</b></color>",
+                Ui.Label(grow.transform, city + " büyüdü: " + catalog.CityLevelNames[r.CityLevelBefore] + " iken artık <color=#fee761><b>" + catalog.CityLevelNames[r.CityLevelAfter] + "</b></color>",
                     4.6f, Ui.Ink, TextAnchor.MiddleCenter);
             }
             else if (r.Arrived && r.Stars > r.PreviousBestStars)

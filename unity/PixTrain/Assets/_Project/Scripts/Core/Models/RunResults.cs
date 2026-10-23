@@ -2,7 +2,8 @@ using PixTrain.Core.Data;
 
 namespace PixTrain.Core.Models
 {
-    public enum RunPhase { Running, OutOfFuel, Finished }
+    /// <summary>Stalled: yakıt bitti, tren durdu; oyuncunun "reklam izle, devam et" kararı bekleniyor.</summary>
+    public enum RunPhase { Running, OutOfFuel, Stalled, Finished }
 
     /// <summary>Sefer sırasında olan şeyler. Görsel katman bunları ses, yazı ve efekte çevirir.</summary>
     public enum RunEventType
@@ -11,6 +12,7 @@ namespace PixTrain.Core.Models
         Coin, Pickup, WagonsFull, Delivery, NothingToDeliver, Refuel,
         Crash, OncomingCrash, Horn, Turbo, StreakUp,
         FuelLow, OutOfFuel, NearDestination, NightFell, OncomingWarning, Finished,
+        ContinueOffered, Continued,
     }
 
     public struct RunEvent
@@ -87,8 +89,12 @@ namespace PixTrain.Core.Models
         public int CityLevelAfter;
         public int PreviousBestStars;
         public int IdleRateAfter;
+        /// <summary>Ödüllü reklamla kazanç ikiye katlandı mı; eklenen miktar.</summary>
+        public bool EarningsDoubled;
+        public int BonusEarned;
 
         public int RouteEarnings => Earned - FinalPay;
+        public int TotalEarned => Earned + BonusEarned;
         public bool CityGrew => CityLevelAfter > CityLevelBefore;
     }
 }

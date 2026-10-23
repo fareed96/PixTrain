@@ -20,6 +20,7 @@ namespace PixTrain.Snapshots
 
         private static int Main(string[] args)
         {
+            if (args.Length > 1 && args[0] == "web-assets") return WebAssets(args[1]);
             string outDir = args.Length > 0 ? args[0] : "snapshots";
             Directory.CreateDirectory(outDir);
 
@@ -46,6 +47,44 @@ namespace PixTrain.Snapshots
             Benchmark();
             Console.WriteLine("Kareler: " + Path.GetFullPath(outDir));
             return 0;
+        }
+
+        /// <summary>Web sayfası görselleri: logo, uygulama ikonları, favicon (WebGL şablonu için).</summary>
+        private static int WebAssets(string dir)
+        {
+            Directory.CreateDirectory(dir);
+            Png.Write(Path.Combine(dir, "logo.png"), UiArt.Logo(), 4);
+            var icon = AppIcon();
+            Png.Write(Path.Combine(dir, "favicon.png"), icon, 1);
+            Png.Write(Path.Combine(dir, "icon-192.png"), icon, 6);
+            Png.Write(Path.Combine(dir, "icon-512.png"), icon, 16);
+            Console.WriteLine("Web görselleri: " + Path.GetFullPath(dir));
+            return 0;
+        }
+
+        /// <summary>32x32 ikon: gece mavisi zemin, ray, buharlı lokomotifin burnu.</summary>
+        private static PixelImage AppIcon()
+        {
+            var lib = SpriteLibrary.Instance;
+            var img = new PixelImage(32, 32);
+            img.Clear(Palette.Get('d'));
+            for (int y = 0; y < 32; y++)
+            {
+                if (y % 4 == 0) img.FillRect(9, y, 14, 1, Palette.Get('n'));
+                img.FillRect(12, y, 1, 1, Palette.Get('S'));
+                img.FillRect(19, y, 1, 1, Palette.Get('S'));
+            }
+            var loco = lib.Locomotives["steam"];
+            img.Blit(lib.ShadowOf(loco), 12, 5);
+            img.Blit(loco, 10, 3);
+            img.FillRect(0, 0, 32, 1, Palette.Get('k'));
+            img.FillRect(0, 31, 32, 1, Palette.Get('k'));
+            img.FillRect(0, 0, 1, 32, Palette.Get('k'));
+            img.FillRect(31, 0, 1, 32, Palette.Get('k'));
+            img.FillRect(4, 6, 1, 1, Palette.Get('Y'));
+            img.FillRect(26, 4, 1, 1, Palette.Get('Y'));
+            img.FillRect(25, 22, 1, 1, Palette.Get('w'));
+            return img;
         }
 
         private static GameServices NewGame(int locomotive)
