@@ -93,6 +93,16 @@ python3 tools/export_sprites.py
 
 Unity her dosya için bir `.meta` ister. GUID'ler dosya yolundan üretilir, yani her makinede aynıdır. Var olan `.meta` dosyalarına dokunulmaz.
 
-## Sonraki adım
+## Bulutta derleme (GitHub Actions + GameCI)
 
-4. **GitHub Actions + GameCI:** her push'ta testler, WebGL ve Android derlemesi. Unity hesabı bilgileri GitHub repo secret'larına eklenmeli.
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) her push'ta çalışır:
+
+| İş | Ne yapar | Çıktı (Actions → çalıştırma → Artifacts) |
+|---|---|---|
+| Kurallar ve çizim testleri (.NET) | `dotnet test`, oyun karelerini PNG üretir | `PixTrain-kareler` |
+| Unity EditMode testleri | Aynı testler Unity 6000.3.27f1 içinde | `Unity-test-sonuclari` |
+| Derleme (WebGL) | Tarayıcı sürümü (sıkıştırmasız, her sunucuda açılır) | `PixTrain-WebGL` |
+| Derleme (Android) | IL2CPP, ARM64 APK (debug imzalı, telefona doğrudan kurulur) | `PixTrain-Android` |
+| GitHub Pages | WebGL'i yayınlar; yalnızca `DEPLOY_PAGES` repo değişkeni `true` ise | Pages adresi |
+
+Gerekli repo secret'ları: `UNITY_LICENSE` (Unity Hub'da oluşturulan `.ulf` dosyasının içeriği), `UNITY_EMAIL`, `UNITY_PASSWORD`.
